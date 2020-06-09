@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+   http://www.springframework.org/schema/beans/spring-beans.xsd
+   http://www.springframework.org/schema/context
+   http://www.springframework.org/schema/context/spring-context.xsd
+   http://www.springframework.org/schema/aop
+   http://www.springframework.org/schema/aop/spring-aop.xsd
+   http://www.springframework.org/schema/tx
+   http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <!--&lt;!&ndash;自己创建的对象可以使用组件，@Service、@Controller、@Repository、@Component&ndash;&gt;-->
+    <context:component-scan base-package="com.itheima.ssm">
+        <!--配置：不扫描@Controller-->
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"></context:exclude-filter>
+    </context:component-scan>
+
+    <!--spring整合mybatis-->
+    <!--1：创建数据源-->
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="driverClass" value="com.mysql.jdbc.Driver"></property>
+        <property name="jdbcUrl" value="jdbc:mysql://localhost:3306/ssm"></property>
+        <property name="user" value="root"></property>
+        <property name="password" value="root"></property>
+    </bean>
+    <!--2：创建SqlSessionFactoryBean，这是spring整合mybatis的核心-->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"></property>
+        <!--加载mybatis的配置文件-->
+        <property name="configLocation" value="classpath:sqlMapConfig.xml"></property>
+        <!--加载mybatis的映射文件-->
+        <property name="mapperLocations">
+            <set>
+                <value>classpath:com/itheima/ssm/dao/*Dao.xml</value>
+            </set>
+        </property>
+    </bean>
+    <!--3：让Dao被spring所管理，相当于com.itheima.ssm.dao包下的所有类都可以被spring管理-->
+    <bean id="mapperScannerConfigurer" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.itheima.ssm.dao"></property>
+    </bean>
+
+    <!--配置spring的声明式事务处理-->
+    <!--1：配置事务管理器-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+    <!--&lt;!&ndash;2：切入点方法的细化&ndash;&gt;-->
+    <!--<tx:advice id="myAdvice" transaction-manager="transactionManager">-->
+        <!--<tx:attributes>-->
+            <!--<tx:method name="save*" isolation="DEFAULT" propagation="REQUIRED" read-only="false"/>-->
+            <!--<tx:method name="insert*" isolation="DEFAULT" propagation="REQUIRED" read-only="false"/>-->
+            <!--<tx:method name="update*" isolation="DEFAULT" propagation="REQUIRED" read-only="false"/>-->
+            <!--<tx:method name="edit*" isolation="DEFAULT" propagation="REQUIRED" read-only="false"/>-->
+            <!--<tx:method name="delete*" isolation="DEFAULT" propagation="REQUIRED" read-only="false"/>-->
+            <!--<tx:method name="*" read-only="true"></tx:method>-->
+        <!--</tx:attributes>-->
+    <!--</tx:advice>-->
+    <!--&lt;!&ndash;3：配置aop，定义切入点，让切入点(Service层方法）关联通知（事务中的方法）&ndash;&gt;-->
+    <!--<aop:config>-->
+        <!--<aop:pointcut id="myPointcut" expression="execution(* com.itheima.ssm.service..*.*(..))"></aop:pointcut>-->
+        <!--<aop:advisor advice-ref="myAdvice" pointcut-ref="myPointcut"></aop:advisor>-->
+    <!--</aop:config>-->
+
+    <!--注解开发-->
+    <tx:annotation-driven transaction-manager="transactionManager"></tx:annotation-driven>
+    
+</beans>
